@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>미니게임 팀 랭킹</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    body { padding-bottom: 80px; }
+    /* 서브 탭 활성화 스타일 */
+    .sub-tab.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: bold; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+  <!-- 헤더 -->
+  <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-20">
+    <div class="max-w-3xl mx-auto flex items-center justify-center gap-2">
+      <i class="fa-solid fa-flag-checkered text-yellow-300 text-xl"></i>
+      <h1 class="text-xl font-bold">미니게임 팀 랭킹전</h1>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto p-4 mt-2">
+    
+    <!-- 1. 랭킹 보드 탭 (기본 활성화) -->
+    <div id="tab-ranking" class="tab-content active bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+      
+      <!-- 게임 선택 서브 탭 -->
+      <div class="flex border-b border-gray-200 mb-6">
+        <button onclick="switchGameRank('flag')" id="sub-flag" class="sub-tab active flex-1 py-3 text-sm sm:text-base text-gray-500 hover:text-indigo-600 transition-colors">
+          <i class="fa-regular fa-flag mr-1"></i>세계국기퀴즈
+        </button>
+        <button onclick="switchGameRank('pingpong')" id="sub-pingpong" class="sub-tab flex-1 py-3 text-sm sm:text-base text-gray-500 hover:text-indigo-600 transition-colors">
+          <i class="fa-solid fa-table-tennis-paddle-ball mr-1"></i>에어핑퐁
+        </button>
+        <button onclick="switchGameRank('goal')" id="sub-goal" class="sub-tab flex-1 py-3 text-sm sm:text-base text-gray-500 hover:text-indigo-600 transition-colors">
+          <i class="fa-solid fa-basketball mr-1"></i>협동골인
+        </button>
+      </div>
+
+      <h2 id="rankingTitle" class="text-xl font-bold mb-4 text-center text-indigo-900">
+        세계국기퀴즈 팀 랭킹
+      </h2>
+
+      <!-- 로딩 및 빈 상태 표시 -->
+      <div id="loadingIndicator" class="flex flex-col items-center justify-center py-10 text-gray-400">
+        <i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-400"></i>
+        <p>기록을 불러오는 중...</p>
+      </div>
+      <div id="emptyState" class="hidden text-center py-10 text-gray-500 bg-gray-50 rounded-xl">
+        <i class="fa-solid fa-ranking-star text-4xl mx-auto text-gray-300 mb-3"></i>
+        <p>아직 등록된 팀 기록이 없습니다.</p>
+      </div>
+
+      <!-- 랭킹 테이블 -->
+      <div id="rankingTableContainer" class="hidden overflow-hidden rounded-xl border border-gray-200">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 text-sm border-b border-gray-200">
+              <th class="p-3 font-semibold text-center w-16">순위</th>
+              <th class="p-3 font-semibold">팀명</th>
+              <th class="p-3 font-semibold text-right pr-6">달성 갯수</th>
+            </tr>
+          </thead>
+          <tbody id="rankingTableBody">
+            <!-- JS로 렌더링 됨 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. 점수 기록 탭 (관리자/진행자용) -->
+    <div id="tab-record" class="tab-content bg-white rounded-2xl shadow-sm p-6">
+      <h2 class="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-indigo-500"></i> 팀 기록 입력
+      </h2>
+
+      <!-- 🔒 관리자 잠금 화면 (추가됨) -->
+      <div id="adminLockScreen" class="text-center py-8">
+        <div class="inline-block p-4 bg-gray-50 rounded-full mb-4">
+          <i class="fa-solid fa-lock text-3xl text-gray-400"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-700 mb-2">관리자 권한 필요</h3>
+        <p class="text-sm text-gray-500 mb-6">점수를 입력하려면 진행자 비밀번호를 입력하세요.</p>
+        <div class="flex max-w-xs mx-auto gap-2">
+          <input type="password" id="adminPassword" inputmode="numeric" class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 text-center text-lg tracking-widest" placeholder="PIN 번호">
+          <button onclick="unlockAdmin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-5 rounded-xl transition-colors">확인</button>
+        </div>
+        <p id="adminErrorMsg" class="text-red-500 text-sm mt-3 hidden font-medium">비밀번호가 일치하지 않습니다.</p>
+      </div>
+      
+      <!-- 📝 실제 기록 폼 (초기에는 숨김 처리) -->
+      <form id="recordForm" class="space-y-6 hidden">
+        <!-- 게임 종류 선택 -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">어떤 게임의 기록인가요?</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="gameType" value="flag" class="peer sr-only" checked>
+              <div class="text-center py-3 border-2 border-gray-200 rounded-xl peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 hover:bg-gray-50 transition-all text-sm font-medium">
+                세계국기퀴즈
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="gameType" value="pingpong" class="peer sr-only">
+              <div class="text-center py-3 border-2 border-gray-200 rounded-xl peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 hover:bg-gray-50 transition-all text-sm font-medium">
+                에어핑퐁
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="gameType" value="goal" class="peer sr-only">
+              <div class="text-center py-3 border-2 border-gray-200 rounded-xl peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 hover:bg-gray-50 transition-all text-sm font-medium">
+                협동골인
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">팀명 (기존 팀명과 같으면 합산됨)</label>
+          <input type="text" id="teamName" required class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500" placeholder="예: 무적파워팀" maxlength="15">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">추가할 성공 갯수</label>
+          <div class="relative">
+            <input type="number" id="scoreCount" required class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 text-lg font-bold text-indigo-700" placeholder="0" min="0">
+            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500 font-medium">
+              개
+            </div>
+          </div>
+        </div>
+
+        <div id="messageBox" class="hidden p-3 rounded-lg text-sm text-center font-medium"></div>
+
+        <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 text-lg">
+          기록 등록하기
+        </button>
+      </form>
+    </div>
+
+    <!-- 3. QR 공유 탭 -->
+    <div id="tab-qr" class="tab-content bg-white rounded-2xl shadow-sm p-8 text-center">
+      <h2 class="text-2xl font-bold mb-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-qrcode text-indigo-500"></i> 모바일 랭킹 접속 QR
+      </h2>
+      <p class="text-gray-500 mb-8">스마트폰으로 스캔하면<br/>팀별 실시간 랭킹 홈페이지로 접속됩니다.</p>
+      
+      <div class="inline-block p-4 bg-white border-4 border-indigo-100 rounded-3xl shadow-sm">
+        <img id="qrCodeImg" src="" alt="Ranking QR Code" class="w-48 h-48 sm:w-64 sm:h-64 mx-auto rounded-lg">
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 하단 네비게이션 -->
+  <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe z-30">
+    <div class="max-w-md mx-auto flex justify-around">
+      <button onclick="switchMainTab('ranking')" id="nav-ranking" class="flex flex-col items-center p-3 flex-1 text-indigo-600 transition-colors">
+        <i class="fa-solid fa-trophy text-xl mb-1 scale-110"></i>
+        <span class="text-xs font-semibold">게임 랭킹</span>
+      </button>
+      <button onclick="switchMainTab('record')" id="nav-record" class="flex flex-col items-center p-3 flex-1 text-gray-400 hover:text-indigo-600 transition-colors">
+        <i class="fa-solid fa-clipboard-check text-xl mb-1"></i>
+        <span class="text-xs font-semibold">점수 입력</span>
+      </button>
+      <button onclick="switchMainTab('qr')" id="nav-qr" class="flex flex-col items-center p-3 flex-1 text-gray-400 hover:text-indigo-600 transition-colors">
+        <i class="fa-solid fa-qrcode text-xl mb-1"></i>
+        <span class="text-xs font-semibold">QR 공유</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Firebase 및 핵심 로직 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 본인의 Firebase 프로젝트 설정
+    let firebaseConfig = {
+      apiKey: "AIzaSyBxl3ilRKVw7K2oMuEKK03X0HXcwcsMLew",
+      authDomain: "svp-csr.firebaseapp.com",
+      projectId: "svp-csr",
+      storageBucket: "svp-csr.firebasestorage.app",
+      messagingSenderId: "554046321803",
+      appId: "1:554046321803:web:8f08e430acbbe09a70d08e",
+      measurementId: "G-6L72NT13XT"
+    };
+
+    const targetAppId = 'team-minigames';
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let allRecords = []; 
+
+    const form = document.getElementById('recordForm');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const emptyState = document.getElementById('emptyState');
+    const rankingTableContainer = document.getElementById('rankingTableContainer');
+    const rankingTableBody = document.getElementById('rankingTableBody');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageBox = document.getElementById('messageBox');
+    
+    let currentGameView = 'flag'; 
+
+    // 실시간 데이터베이스 연동
+    const recordsRef = collection(db, 'artifacts', targetAppId, 'public', 'data', 'team_records');
+    onSnapshot(recordsRef, (snapshot) => {
+      allRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderRanking(currentGameView);
+    }, (error) => {
+      console.error("데이터 읽기 오류:", error);
+    });
+
+    // 게임 랭킹 탭 전환
+    window.switchGameRank = function(gameType) {
+      currentGameView = gameType;
+      
+      document.querySelectorAll('.sub-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('sub-' + gameType).classList.add('active');
+      
+      const titles = { 'flag': '세계국기퀴즈', 'pingpong': '에어핑퐁', 'goal': '협동골인' };
+      document.getElementById('rankingTitle').innerText = titles[gameType] + ' 팀 랭킹';
+      
+      renderRanking(gameType);
+    };
+
+    // 🏆 핵심 변경점: 중복 팀 점수 합산 로직 추가
+    function renderRanking(gameType) {
+      loadingIndicator.classList.add('hidden');
+      
+      // 1. 해당 게임의 데이터만 필터링
+      const filteredRecords = allRecords.filter(record => record.gameType === gameType);
+      
+      // 2. 팀명 기준으로 점수 합산 (띄어쓰기 무시하고 같은 팀으로 인식)
+      const aggregated = {};
+      filteredRecords.forEach(record => {
+        const teamKey = record.teamName.replace(/\s+/g, '').toLowerCase(); // 공백 제거 및 소문자 변환
+        
+        if (aggregated[teamKey]) {
+          aggregated[teamKey].score += record.score; // 중복팀이면 점수 더하기
+        } else {
+          aggregated[teamKey] = {
+            teamName: record.teamName, // 원본 팀명 유지
+            score: record.score
+          };
+        }
+      });
+
+      // 3. 합산된 객체를 점수 내림차순으로 정렬
+      const finalRecords = Object.values(aggregated).sort((a, b) => b.score - a.score); 
+      
+      if (finalRecords.length === 0) {
+        emptyState.classList.remove('hidden');
+        rankingTableContainer.classList.add('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      rankingTableContainer.classList.remove('hidden');
+      rankingTableBody.innerHTML = '';
+
+      finalRecords.forEach((record, index) => {
+        let rankHtml = `<span class="text-gray-500 font-bold">${index + 1}</span>`;
+        let rowClass = "border-b border-gray-100 hover:bg-gray-50";
+        
+        if (index === 0) {
+          rankHtml = `<i class="fa-solid fa-medal text-xl text-yellow-500"></i>`;
+          rowClass = "bg-yellow-50/50 border-b border-yellow-100";
+        } else if (index === 1) {
+          rankHtml = `<i class="fa-solid fa-medal text-xl text-gray-400"></i>`;
+          rowClass = "bg-gray-50/80 border-b border-gray-100";
+        } else if (index === 2) {
+          rankHtml = `<i class="fa-solid fa-medal text-xl text-amber-600"></i>`;
+          rowClass = "bg-amber-50/30 border-b border-amber-100";
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = rowClass;
+        tr.innerHTML = `
+          <td class="p-3 text-center align-middle">${rankHtml}</td>
+          <td class="p-3 font-bold text-gray-800 text-base">${record.teamName}</td>
+          <td class="p-3 text-right font-bold text-indigo-700 pr-6 text-lg">${record.score}개</td>
+        `;
+        rankingTableBody.appendChild(tr);
+      });
+    }
+
+    function showMessage(msg, isError) {
+      messageBox.textContent = msg;
+      messageBox.className = `p-3 rounded-lg text-sm text-center font-bold block ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+      setTimeout(() => { messageBox.classList.add('hidden'); }, 3000);
+    }
+
+    // 데이터 저장
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const teamName = document.getElementById('teamName').value.trim();
+      const score = Number(document.getElementById('scoreCount').value);
+      const gameType = document.querySelector('input[name="gameType"]:checked').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...`;
+
+      try {
+        const recordsRef = collection(db, 'artifacts', targetAppId, 'public', 'data', 'team_records');
+        await addDoc(recordsRef, {
+          teamName: teamName,
+          gameType: gameType,
+          score: score,
+          timestamp: new Date().toISOString()
+        });
+
+        document.getElementById('teamName').value = '';
+        document.getElementById('scoreCount').value = '';
+        
+        showMessage('기록이 성공적으로 등록되었습니다!', false);
+        
+        setTimeout(() => {
+          window.switchMainTab('ranking');
+          window.switchGameRank(gameType); 
+        }, 1000);
+
+      } catch (error) {
+        console.error("저장 오류:", error);
+        showMessage('저장에 실패했습니다.', true);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `기록 등록하기`;
+      }
+    });
+  </script>
+
+  <!-- 기타 UI 로직 -->
+  <script>
+    // 🔒 관리자 잠금 해제 기능 (비밀번호: 1234)
+    window.unlockAdmin = function() {
+      const pw = document.getElementById('adminPassword').value;
+      
+      if (pw === '0805') { // <-- 비밀번호를 변경하려면 이 부분의 숫자를 수정하세요!
+        document.getElementById('adminLockScreen').classList.add('hidden');
+        document.getElementById('recordForm').classList.remove('hidden');
+      } else {
+        const errorMsg = document.getElementById('adminErrorMsg');
+        errorMsg.classList.remove('hidden');
+        setTimeout(() => errorMsg.classList.add('hidden'), 2000);
+      }
+    };
+
+    window.switchMainTab = function(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('text-indigo-600');
+        btn.classList.add('text-gray-400');
+        btn.querySelector('i').classList.remove('scale-110');
+      });
+      
+      document.getElementById('tab-' + tabId).classList.add('active');
+      const activeBtn = document.getElementById('nav-' + tabId);
+      activeBtn.classList.remove('text-gray-400');
+      activeBtn.classList.add('text-indigo-600');
+      activeBtn.querySelector('i').classList.add('scale-110');
+    };
+
+    window.onload = function() {
+      const currentUrl = window.location.href.split('#')[0].split('?')[0]; 
+      const qrImg = document.getElementById('qrCodeImg');
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}&margin=10`;
+    }
+  </script>
+</body>
+</html>
