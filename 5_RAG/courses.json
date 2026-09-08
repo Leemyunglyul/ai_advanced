@@ -1,0 +1,48 @@
+{
+  "courses": [
+    {
+      "id": 1,
+      "title": "Python 기초",
+      "instructor": "김파이썬",
+      "duration": "4주",
+      "level": "초급",
+      "topics": [
+        "변수",
+        "조건문",
+        "반복문",
+        "함수"
+      ],
+      "description": "파이썬 프로그래밍의 기초를 배우는 과정입니다."
+    },
+    {
+      "id": 2,
+      "title": "머신러닝 입문",
+      "instructor": "이AI",
+      "duration": "8주",
+      "level": "중급",
+      "topics": [
+        "지도학습",
+        "비지도학습",
+        "신경망",
+        "딥러닝 기초"
+      ],
+      "description": "머신러닝의 기본 개념과 알고리즘을 학습합니다."
+    },
+    {
+      "id": 3,
+      "title": "LangChain 마스터",
+      "instructor": "박체인",
+      "duration": "6주",
+      "level": "고급",
+      "topics": [
+        "Document Loader",
+        "Text Splitter",
+        "Embeddings",
+        "Vector Store",
+        "Chains",
+        "Agents"
+      ],
+      "description": "LangChain을 활용한 AI 애플리케이션 개발 방법을 배웁니다."
+    }
+  ]
+}
