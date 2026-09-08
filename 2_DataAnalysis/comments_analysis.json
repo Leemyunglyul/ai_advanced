@@ -1,0 +1,15 @@
+{
+  "total_comments": 10,
+  "sentiment_distribution": {
+    "중립": 4,
+    "긍정": 3,
+    "부정": 3
+  },
+  "avg_likes": 6.6,
+  "tech_comments_ratio": 0.6,
+  "top_keywords": [
+    "Python",
+    "AI",
+    "머신러닝"
+  ]
+}
