@@ -1,0 +1,37 @@
+{
+  "department_counts": {
+    "AI팀": 2
+  },
+  "skill_distribution": {
+    "Python": 2,
+    "Machine Learning": 1,
+    "NLP": 1,
+    "Data Analysis": 1,
+    "Visualization": 1
+  },
+  "project_statistics": {
+    "total_projects": 3,
+    "completed_projects": 1,
+    "in_progress_projects": 2,
+    "average_progress": 78.33333333333333
+  },
+  "user_summaries": [
+    {
+      "name": "김개발",
+      "department": "AI팀",
+      "position": "시니어 개발자",
+      "skill_count": 3,
+      "project_count": 2,
+      "avg_project_progress": 87.5
+    },
+    {
+      "name": "이분석",
+      "department": "AI팀",
+      "position": "주니어 개발자",
+      "skill_count": 3,
+      "project_count": 1,
+      "avg_project_progress": 60.0
+    }
+  ],
+  "total_users": 2
+}

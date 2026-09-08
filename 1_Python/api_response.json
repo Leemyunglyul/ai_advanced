@@ -1,0 +1,54 @@
+{
+  "status": "success",
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "김개발",
+        "email": "kim@company.com",
+        "profile": {
+          "department": "AI팀",
+          "position": "시니어 개발자",
+          "skills": [
+            "Python",
+            "Machine Learning",
+            "NLP"
+          ]
+        },
+        "projects": [
+          {
+            "name": "텍스트 분석",
+            "status": "진행중",
+            "progress": 75
+          },
+          {
+            "name": "챗봇 개발",
+            "status": "완료",
+            "progress": 100
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "이분석",
+        "email": "lee@company.com",
+        "profile": {
+          "department": "AI팀",
+          "position": "주니어 개발자",
+          "skills": [
+            "Python",
+            "Data Analysis",
+            "Visualization"
+          ]
+        },
+        "projects": [
+          {
+            "name": "데이터 대시보드",
+            "status": "진행중",
+            "progress": 60
+          }
+        ]
+      }
+    ]
+  }
+}
